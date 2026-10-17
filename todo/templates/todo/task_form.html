@@ -1,0 +1,99 @@
+{% extends 'todo/base.html' %}
+
+{% block title %}
+  {% if action == 'edit' %}Edit Task — {{ task.title }}{% else %}New Task — TaskFlow{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="form-card-container">
+  <div class="form-card">
+    <div class="form-header">
+      <div class="form-header-icon">
+        {% if action == 'edit' %}
+          <i class="fa-solid fa-pen-to-square"></i>
+        {% else %}
+          <i class="fa-solid fa-plus"></i>
+        {% endif %}
+      </div>
+      <div>
+        <h2>{% if action == 'edit' %}Edit Task{% else %}Create New Task{% endif %}</h2>
+        <p>{% if action == 'edit' %}Update task information, notes, and completion status.{% else %}Organize your workflow by adding a new task to your list.{% endif %}</p>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    {% if error %}
+    <div class="toast-item error" style="margin-bottom: 1.5rem;">
+      <div class="toast-icon">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div class="toast-text">{{ error }}</div>
+    </div>
+    {% endif %}
+
+    <form method="POST" novalidate>
+      {% csrf_token %}
+
+      <!-- Task Title Field -->
+      <div class="form-group">
+        <label for="id_title" class="form-label">
+          Task Title <span style="color: var(--danger-500);">*</span>
+        </label>
+        <input
+          type="text"
+          id="id_title"
+          name="title"
+          class="form-control-custom"
+          placeholder="e.g. Design high-fidelity landing page..."
+          value="{% if task %}{{ task.title }}{% else %}{{ title|default:'' }}{% endif %}"
+          required
+          autofocus
+        >
+      </div>
+
+      <!-- Task Description Field -->
+      <div class="form-group">
+        <label for="id_description" class="form-label">
+          Description & Notes <span style="font-weight: 400; color: var(--text-muted);">(optional)</span>
+        </label>
+        <textarea
+          id="id_description"
+          name="description"
+          class="form-control-custom"
+          placeholder="Provide context, acceptance criteria, or key reminders..."
+        >{% if task %}{{ task.description }}{% else %}{{ description|default:'' }}{% endif %}</textarea>
+      </div>
+
+      <!-- Completion Status Toggle (For Edit view) -->
+      {% if action == 'edit' %}
+      <div class="form-group">
+        <label class="switch-label-wrapper" for="id_complated">
+          <div class="switch-text">
+            <span class="title">Mark as Completed</span>
+            <span class="subtitle">Set status to done and celebrate progress</span>
+          </div>
+          <input
+            type="checkbox"
+            name="complated"
+            id="id_complated"
+            class="switch-input"
+            {% if task.complated %}checked{% endif %}
+          >
+        </label>
+      </div>
+      {% endif %}
+
+      <!-- Form Action Buttons -->
+      <div class="form-actions">
+        <a href="{% url 'todo:task_list' %}" class="btn-secondary-custom">
+          <i class="fa-solid fa-arrow-left"></i> Cancel
+        </a>
+        <button type="submit" class="btn-primary-gradient">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>{% if action == 'edit' %}Update Task{% else %}Create Task{% endif %}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

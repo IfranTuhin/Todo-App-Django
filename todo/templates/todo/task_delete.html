@@ -1,0 +1,55 @@
+{% extends 'todo/base.html' %}
+
+{% block title %}Delete Task — {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="form-card-container">
+  <div class="form-card" style="border-color: rgba(239, 68, 68, 0.3);">
+    <div class="form-header">
+      <div class="form-header-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); box-shadow: 0 4px 12px var(--danger-glow);">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h2 style="color: var(--danger-500);">Delete Task?</h2>
+        <p>This action is irreversible. The selected task will be permanently removed.</p>
+      </div>
+    </div>
+
+    <!-- Task Information Preview Card -->
+    <div class="delete-preview-box">
+      <div class="delete-preview-title">{{ task.title }}</div>
+      {% if task.description %}
+      <div class="delete-preview-desc">{{ task.description }}</div>
+      {% endif %}
+      <div class="task-meta" style="margin-top: 0.75rem;">
+        <span class="meta-item">
+          <i class="fa-regular fa-calendar"></i>
+          Created {{ task.created_at|date:"M j, Y • g:i a" }}
+        </span>
+        {% if task.complated %}
+        <span class="status-badge completed">
+          <i class="fa-solid fa-circle-check"></i> Completed
+        </span>
+        {% else %}
+        <span class="status-badge pending">
+          <i class="fa-solid fa-clock"></i> In Progress
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Form -->
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-actions">
+        <a href="{% url 'todo:task_list' %}" class="btn-secondary-custom">
+          <i class="fa-solid fa-arrow-left"></i> Cancel, Keep Task
+        </a>
+        <button type="submit" class="btn-danger-custom">
+          <i class="fa-solid fa-trash-can"></i> Confirm & Delete
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

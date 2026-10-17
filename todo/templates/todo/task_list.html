@@ -1,0 +1,159 @@
+{% extends 'todo/base.html' %}
+
+{% block title %}Tasks Dashboard — TaskFlow{% endblock %}
+
+{% block content %}
+<!-- Dashboard Hero & Progress Overview -->
+<section class="hero-card">
+  <div class="hero-content">
+    <div class="hero-title-section">
+      <h1>My Workspace</h1>
+      <p class="hero-subtitle">
+        <i class="fa-regular fa-calendar-check"></i>
+        <span>{% now "l, F j, Y" %}</span>
+      </p>
+    </div>
+
+    <!-- Stats Quick Pills -->
+    <div class="stats-grid">
+      <div class="stat-pill stat-total">
+        <span class="stat-num" id="statTotal">{{ total_count }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat-pill stat-pending">
+        <span class="stat-num" id="statPending">{{ pending_count }}</span>
+        <span class="stat-label">Pending</span>
+      </div>
+      <div class="stat-pill stat-completed">
+        <span class="stat-num" id="statCompleted">{{ completed_count }}</span>
+        <span class="stat-label">Done</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress Bar Component -->
+  <div class="progress-card">
+    <div class="progress-header">
+      <span><i class="fa-solid fa-chart-line"></i> Task Completion</span>
+      <span id="progressPercent">{{ completion_percentage }}%</span>
+    </div>
+    <div class="progress-track" role="progressbar" aria-valuenow="{{ completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-fill" id="progressFill" style="width: {{ completion_percentage }}%;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Search & Filtering Toolbar -->
+<section class="toolbar-container">
+  <!-- Search Input -->
+  <div class="search-box">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <form method="GET" action="{% url 'todo:task_list' %}" id="searchForm">
+      {% if filter_type and filter_type != 'all' %}
+        <input type="hidden" name="filter" value="{{ filter_type }}">
+      {% endif %}
+      <input
+        type="text"
+        name="q"
+        value="{{ search_query }}"
+        class="search-input"
+        id="liveSearchInput"
+        placeholder="Search tasks... (Press '/' to focus)"
+        autocomplete="off"
+      >
+    </form>
+  </div>
+
+  <!-- Filter Pills -->
+  <nav class="filter-pills" aria-label="Task Status Filters">
+    <a href="{% url 'todo:task_list' %}{% if search_query %}?q={{ search_query }}{% endif %}" class="filter-pill {% if filter_type == 'all' or not filter_type %}active{% endif %}">
+      <i class="fa-solid fa-list-check"></i> All
+      <span class="pill-count">{{ total_count }}</span>
+    </a>
+    <a href="{% url 'todo:task_list' %}?filter=pending{% if search_query %}&q={{ search_query }}{% endif %}" class="filter-pill {% if filter_type == 'pending' %}active{% endif %}">
+      <i class="fa-regular fa-circle-dot"></i> In Progress
+      <span class="pill-count">{{ pending_count }}</span>
+    </a>
+    <a href="{% url 'todo:task_list' %}?filter=completed{% if search_query %}&q={{ search_query }}{% endif %}" class="filter-pill {% if filter_type == 'completed' %}active{% endif %}">
+      <i class="fa-solid fa-check"></i> Completed
+      <span class="pill-count">{{ completed_count }}</span>
+    </a>
+  </nav>
+</section>
+
+<!-- Tasks List Section -->
+<section class="task-list-grid" id="tasksList">
+  {% for task in tasks %}
+  <article class="task-card {% if task.complated %}is-completed{% endif %}" id="task-{{ task.id }}">
+    <!-- Interactive Check / Toggle Button -->
+    <form action="{% url 'todo:task_toggle' task.id %}" method="POST" class="js-toggle-form">
+      {% csrf_token %}
+      <button type="submit" class="toggle-btn" aria-label="Toggle task status" title="Click to toggle status">
+        <div class="custom-checkbox">
+          <i class="{% if task.complated %}fa-solid fa-check{% endif %}"></i>
+        </div>
+      </button>
+    </form>
+
+    <!-- Task Content Area -->
+    <div class="task-body">
+      <h3 class="task-title">{{ task.title }}</h3>
+      {% if task.description %}
+      <p class="task-description">{{ task.description }}</p>
+      {% endif %}
+
+      <div class="task-meta">
+        <span class="meta-item">
+          <i class="fa-regular fa-clock"></i>
+          {{ task.created_at|date:"M j, Y • g:i a" }}
+        </span>
+
+        {% if task.complated %}
+        <span class="status-badge completed">
+          <i class="fa-solid fa-circle-check"></i> Completed
+        </span>
+        {% else %}
+        <span class="status-badge pending">
+          <i class="fa-solid fa-clock"></i> In Progress
+        </span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="task-actions">
+      <a href="{% url 'todo:task_edit' task.id %}" class="btn-action-icon edit" title="Edit task" aria-label="Edit task {{ task.title }}">
+        <i class="fa-solid fa-pen-to-square"></i>
+      </a>
+      <a href="{% url 'todo:task_delete' task.id %}" class="btn-action-icon delete" title="Delete task" aria-label="Delete task {{ task.title }}">
+        <i class="fa-solid fa-trash-can"></i>
+      </a>
+    </div>
+  </article>
+  {% empty %}
+  <div class="empty-state">
+    <div class="empty-icon-wrap">
+      {% if search_query or filter_type != 'all' and filter_type %}
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+      {% else %}
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      {% endif %}
+    </div>
+
+    {% if search_query or filter_type != 'all' and filter_type %}
+      <h3 class="empty-title">No matching tasks found</h3>
+      <p class="empty-desc">We couldn't find any tasks matching your criteria. Try resetting the filters or search term.</p>
+      <a href="{% url 'todo:task_list' %}" class="btn-secondary-custom">
+        <i class="fa-solid fa-rotate-left"></i> Reset Filters
+      </a>
+    {% else %}
+      <h3 class="empty-title">You're all caught up!</h3>
+      <p class="empty-desc">No tasks in your list yet. Start your productive day by creating your first task.</p>
+      <a href="{% url 'todo:task_create' %}" class="btn-primary-gradient">
+        <i class="fa-solid fa-plus"></i> Create First Task
+      </a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}
